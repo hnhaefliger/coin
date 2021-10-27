@@ -1,20 +1,20 @@
 from .blockchain import Blockchain
 from .block import Block
 from .transaction import Transaction
-from .nodeconnection import NodeConnection
+from .network import NetworkInterface
 
 class Node:
     def __init__(self, other_nodes):
-        self.node_connections = [NodeConnection(node) for node in other_nodes]
+        self.network_interface = NetworkInterface(other_nodes, self.update_blockchain, self.update_blocks, self.update_transactions)
         
-        self.pending_transactions = []
+        self.transactions = []
 
         self.blockchain = Blockchain()
 
     def mine(self):
         # Choose transactions
 
-        block = Block(len(self.blockchain), self.blockchain[-1].hash, self.pending_transactions, difficulty=4)
+        block = Block(len(self.blockchain), self.blockchain[-1].hash, self.transactions, difficulty=4)
 
         if block.mine():
             self.update_blocks(block)
@@ -38,14 +38,14 @@ class Node:
 
         return False
 
-    def transaction(self, sender, receiver, amount):
+    def update_transactions(self, sender, receiver, amount):
         balance = self.blockchain.get_balance(sender)
 
-        for transaction in self.pending_transactions:
+        for transaction in self.transactions:
             balance += transaction.get_balance(sender)
 
         if balance >= amount:
-            self.pending_transactions.append(Transaction(sender, receiver, amount))
+            self.transactions.append(Transaction(sender, receiver, amount))
 
             # Broadcast transaction
 
