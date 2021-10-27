@@ -15,6 +15,13 @@ class Transaction:
 
     def compute_hash(self):
         return hashlib.sha256(str(self).encode('utf-8')).hexdigest()
+    
+    def get_balance(self, key):
+        if self.sender == key:
+            return -self.amount
+
+        elif self.receiver == key:
+            return self.amount
 
     def is_valid(self):
         if self.compute_hash() == self.hash:
@@ -29,5 +36,18 @@ class Transaction:
             'hash': self.hash,
         }
 
-test = Transaction('a', 'b', 12)
-print(test.hash)
+    @staticmethod
+    def from_json(json):
+        transaction = Transaction(
+            json['sender'],
+            json['receiver'],
+            json['amount'],
+        )
+
+        transaction.time = json['time']
+        transaction.hash = json['hash']
+
+        if transaction.is_valid():
+            return Transaction
+
+        return False

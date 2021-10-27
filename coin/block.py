@@ -1,8 +1,11 @@
 import hashlib
 import time
 
+from .transaction import Transaction
+
+
 class Block:
-    def __init__(self, prev, index, transactions, difficulty=4):
+    def __init__(self, index, prev, transactions, difficulty=4):
         self.index = index
         self.prev = prev
         self.time = int(time.time())
@@ -14,7 +17,7 @@ class Block:
         self.hash = self.compute_hash()
 
     def __str__(self):
-        return str(self.nonce) + self.prev + self.index + str(self.time) + ''.join([transaction.hash for transaction in self.transactions])
+        return str(self.nonce) + self.prev + str(self.index) + str(self.time) + ''.join([transaction.hash for transaction in self.transactions])
 
     def compute_hash(self):
         return hashlib.sha256(str(self).encode('utf-8')).hexdigest()
@@ -27,6 +30,14 @@ class Block:
 
         return True
 
+    def get_balance(self, key):
+        balance = 0
+
+        for transaction in self.transactions:
+            balance += transaction.get_balance(key)
+
+        return balance
+
     def is_valid(self):
         if all([transaction.is_valid() for transaction in self.transactions]):
             if self.compute_hash() == self.hash():
@@ -34,6 +45,12 @@ class Block:
                     return True
 
         return False
+
+    def __len__(self):
+        return len(self.transactions)
+
+    def __getitem__(self, idx):
+        return self.transactions[idx]
 
     def as_json(self):
         return {
@@ -47,5 +64,16 @@ class Block:
             'difficulty': self.difficulty,
             'hash': self.hash,
         }
+
+    @staticmethod
+    def from_json(json):
+        block = Block(
+            json['index'],
+            json['prev'],
+            [
+                Transaction.from_json(transaction) for transaction in json['transactions']
+            ],
+            difficulty=json['difficulty']
+        )
 
 
