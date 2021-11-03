@@ -5,8 +5,13 @@ import struct
 import json
 
 class NetworkInterface:
-    def __init__(self, nodes, update_blockchain, update_blocks, update_transactions):
-        self.nodes = []
+    def __init__(self, nodes, update_blockchain, update_blocks, update_transactions, port=8040):
+        self.server = socket.create_server((socket.gethostbyname(socket.gethostname()), port))
+        self.server.listen()
+
+        # communicate with announce (identify self, get peers)
+
+        self.nodes = [self.server]
 
         for i in range(min([5, len(nodes)])):
             # better way of selecting nodes to connect to in order to protect network fully-connectedness
@@ -20,6 +25,8 @@ class NetworkInterface:
 
     def listen(self):
         while True:
+            self.server.accept()
+
             for node in self.nodes:
                 message_type, payload = self.recieve(node)
 
