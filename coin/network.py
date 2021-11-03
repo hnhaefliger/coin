@@ -8,7 +8,7 @@ class NetworkInterface:
     def __init__(self, nodes, update_blockchain, update_blocks, update_transactions):
         self.nodes = []
 
-        for i in range(min((5, len(nodes)))):
+        for i in range(min([5, len(nodes)])):
             # better way of selecting nodes to connect to in order to protect network fully-connectedness
             node = random.choice(nodes)
             nodes.remove(node)
@@ -20,13 +20,21 @@ class NetworkInterface:
 
     def listen(self):
         while True:
-            # check messages
+            for node in self.nodes:
+                message_type, payload = self.recieve(node)
+
+                if message_type == 1:
+                    self.update_blockchain(payload)
+
+                elif message_type == 2:
+                    self.update_blocks(payload)
+
+                elif message_type == 3:
+                    self.update_transactions(payload)
 
             # check sufficient peers
 
             # check keepalive
-            
-            pass
 
     def receive(self, node):
         try:
@@ -41,8 +49,7 @@ class NetworkInterface:
                 return (0, 0, '')
 
         except:
-            # handle disconnect
-            pass
+            self.disconnect()
 
     def send(self, message):
         for node in self.nodes:
@@ -50,8 +57,7 @@ class NetworkInterface:
                 node.send(message)
 
             except:
-                # handle disconnect
-                pass
+                self.disconnect()
 
     def send_keepalive(self):
         message = struct.pack('>I', 0)
@@ -75,3 +81,6 @@ class NetworkInterface:
         message = struct.pack(f'>IB{len(transaction)}s', len(transaction) + 1, 1, transaction)
 
         return self.send(message)
+
+    def disconnect(self):
+        pass
